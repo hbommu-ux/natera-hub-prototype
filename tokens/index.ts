@@ -6,12 +6,12 @@
  * semantic tokens reference primitive tokens.
  */
 
-// Primitive Tokens
-export { primitiveColors, opacityColors } from './primitives/colors';
-export { primitiveSizes } from './primitives/sizes';
+// Import primitives for internal use
+import { primitiveColors, opacityColors } from './primitives/colors';
+import { primitiveSizes } from './primitives/sizes';
 
-// Semantic Color Tokens
-export {
+// Import semantic colors for internal use
+import {
   actionColors,
   colorSwatches,
   componentColors,
@@ -33,7 +33,37 @@ export {
   warningColors,
 } from './semantic/colors';
 
-// Semantic Size Tokens
+// Import semantic sizes for internal use
+import {
+  radiusTokens,
+  sizeTokens,
+  spacingTokens,
+} from './semantic/sizes';
+
+// Re-export all tokens
+export { primitiveColors, opacityColors } from './primitives/colors';
+export { primitiveSizes } from './primitives/sizes';
+export {
+  actionColors,
+  colorSwatches,
+  componentColors,
+  alertColors,
+  buttonColors,
+  cardColors,
+  chipColors,
+  chipStatusColors,
+  inputColors,
+  searchColors,
+  contentColors,
+  errorColors,
+  infoColors,
+  primaryColors,
+  secondaryColors,
+  successColors,
+  surfaceColors,
+  textColors,
+  warningColors,
+} from './semantic/colors';
 export {
   radiusTokens,
   sizeTokens,
