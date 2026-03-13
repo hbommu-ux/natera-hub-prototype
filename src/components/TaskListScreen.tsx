@@ -10,6 +10,7 @@ import { IconButton } from './IconButton';
 import { SideDrawer } from './SideDrawer';
 import { CreateTaskForm, type CreateTaskData } from './CreateTaskForm';
 import { Snackbar } from './Snackbar';
+import { OncologySupportTable, sampleOncologySupportTickets } from './OncologySupportTable';
 import {
   ArrowDownwardIcon,
   ArrowDropDownIcon,
@@ -483,8 +484,11 @@ export const TaskListScreen: React.FC<TaskListScreenProps> = ({ queueId, queueNa
     );
   }
   
-  const totalTasks = allTasks.length;
-  const myTasksCount = myTasks.length;
+  // Calculate task counts (use special counts for Oncology Support queue)
+  const totalTasks = queueId === 'q009' ? sampleOncologySupportTickets.length : allTasks.length;
+  const myTasksCount = queueId === 'q009' 
+    ? sampleOncologySupportTickets.filter(ticket => ticket.ticketOwner === 'Carla Sainz').length 
+    : myTasks.length;
   
   // Group tasks if groupBy is selected
   const groupedTasks: { [key: string]: any[] } = {};
@@ -588,7 +592,7 @@ export const TaskListScreen: React.FC<TaskListScreenProps> = ({ queueId, queueNa
           </div>
           <div style={styles.breadcrumbItem}>
             <CheckCircleIcon style={styles.breadcrumbIcon} />
-            <span style={{...styles.breadcrumbText, ...styles.breadcrumbTextActive}}>Tasks</span>
+            <span style={{...styles.breadcrumbText, ...styles.breadcrumbTextActive}}>{queueName}</span>
           </div>
         </div>
       </div>
@@ -682,13 +686,21 @@ export const TaskListScreen: React.FC<TaskListScreenProps> = ({ queueId, queueNa
                 <div style={styles.chipContent}>
                   <p style={styles.chipLabel}>
                     Group by{groupBy && `: ${
-                      groupBy === 'orderId' ? 'Order ID' :
-                      groupBy === 'patientName' ? 'Patient Name' :
-                      groupBy === 'testNames' ? 'Test Names' :
-                      groupBy === 'edoc' ? 'EDOC' :
-                      groupBy === 'taskType' ? 'Task Type' :
-                      groupBy === 'accountName' ? 'Account Name' :
-                      groupBy
+                      queueId === 'q009' ? (
+                        groupBy === 'source' ? 'Source' :
+                        groupBy === 'accountName' ? 'Account Name' :
+                        groupBy === 'status' ? 'Status' :
+                        groupBy === 'ticketOwner' ? 'Ticket Owner' :
+                        groupBy
+                      ) : (
+                        groupBy === 'orderId' ? 'Order ID' :
+                        groupBy === 'patientName' ? 'Patient Name' :
+                        groupBy === 'testNames' ? 'Test Names' :
+                        groupBy === 'edoc' ? 'EDOC' :
+                        groupBy === 'taskType' ? 'Task Type' :
+                        groupBy === 'accountName' ? 'Account Name' :
+                        groupBy
+                      )
                     }`}
                   </p>
                 </div>
@@ -697,41 +709,79 @@ export const TaskListScreen: React.FC<TaskListScreenProps> = ({ queueId, queueNa
               {showGroupByDropdown && (
                 <div style={styles.groupByDropdown}>
                   <div style={styles.groupByHeader}>Group by</div>
-                  {['orderId', 'patientName', 'testNames', 'edoc', 'taskType', 'accountName'].map((option) => {
-                    const labels: { [key: string]: string } = {
-                      orderId: 'Order ID',
-                      patientName: 'Patient Name',
-                      testNames: 'Test Names',
-                      edoc: 'EDOC',
-                      taskType: 'Task Type',
-                      accountName: 'Account Name',
-                    };
-                    return (
-                      <div
-                        key={option}
-                        style={{
-                          ...styles.groupByOption,
-                          ...(groupBy === option ? styles.groupByOptionActive : {}),
-                        }}
-                        onClick={() => {
-                          setGroupBy(groupBy === option ? null : option);
-                          setShowGroupByDropdown(false);
-                        }}
-                        onMouseEnter={(e) => {
-                          if (groupBy !== option) {
-                            e.currentTarget.style.backgroundColor = 'var(--action-color-hovered)';
-                          }
-                        }}
-                        onMouseLeave={(e) => {
-                          if (groupBy !== option) {
-                            e.currentTarget.style.backgroundColor = 'transparent';
-                          }
-                        }}
-                      >
-                        {labels[option]}
-                      </div>
-                    );
-                  })}
+                  {queueId === 'q009' ? (
+                    // Options for Oncology Support queue
+                    ['source', 'accountName', 'status', 'ticketOwner'].map((option) => {
+                      const labels: { [key: string]: string } = {
+                        source: 'Source',
+                        accountName: 'Account Name',
+                        status: 'Status',
+                        ticketOwner: 'Ticket Owner',
+                      };
+                      return (
+                        <div
+                          key={option}
+                          style={{
+                            ...styles.groupByOption,
+                            ...(groupBy === option ? styles.groupByOptionActive : {}),
+                          }}
+                          onClick={() => {
+                            setGroupBy(groupBy === option ? null : option);
+                            setShowGroupByDropdown(false);
+                          }}
+                          onMouseEnter={(e) => {
+                            if (groupBy !== option) {
+                              e.currentTarget.style.backgroundColor = 'var(--action-color-hovered)';
+                            }
+                          }}
+                          onMouseLeave={(e) => {
+                            if (groupBy !== option) {
+                              e.currentTarget.style.backgroundColor = 'transparent';
+                            }
+                          }}
+                        >
+                          {labels[option]}
+                        </div>
+                      );
+                    })
+                  ) : (
+                    // Options for regular task queues
+                    ['orderId', 'patientName', 'testNames', 'edoc', 'taskType', 'accountName'].map((option) => {
+                      const labels: { [key: string]: string } = {
+                        orderId: 'Order ID',
+                        patientName: 'Patient Name',
+                        testNames: 'Test Names',
+                        edoc: 'EDOC',
+                        taskType: 'Task Type',
+                        accountName: 'Account Name',
+                      };
+                      return (
+                        <div
+                          key={option}
+                          style={{
+                            ...styles.groupByOption,
+                            ...(groupBy === option ? styles.groupByOptionActive : {}),
+                          }}
+                          onClick={() => {
+                            setGroupBy(groupBy === option ? null : option);
+                            setShowGroupByDropdown(false);
+                          }}
+                          onMouseEnter={(e) => {
+                            if (groupBy !== option) {
+                              e.currentTarget.style.backgroundColor = 'var(--action-color-hovered)';
+                            }
+                          }}
+                          onMouseLeave={(e) => {
+                            if (groupBy !== option) {
+                              e.currentTarget.style.backgroundColor = 'transparent';
+                            }
+                          }}
+                        >
+                          {labels[option]}
+                        </div>
+                      );
+                    })
+                  )}
                   <div
                     style={{
                       ...styles.groupByOption,
@@ -768,6 +818,19 @@ export const TaskListScreen: React.FC<TaskListScreenProps> = ({ queueId, queueNa
           </div>
         </div>
 
+        {/* Render special table for Oncology Support queue */}
+        {queueId === 'q009' ? (
+          <OncologySupportTable 
+            tickets={
+              activeTab === 'my' 
+                ? sampleOncologySupportTickets.filter(ticket => ticket.ticketOwner === 'Carla Sainz')
+                : sampleOncologySupportTickets
+            }
+            groupBy={groupBy}
+            queueId={queueId}
+            queueName={queueName}
+          />
+        ) : (
         <div style={styles.tableWrapper}>
           <table style={styles.table}>
             <thead>
@@ -829,6 +892,7 @@ export const TaskListScreen: React.FC<TaskListScreenProps> = ({ queueId, queueNa
             </p>
           </div>
         </div>
+        )}
           </>
         )}
       </div>

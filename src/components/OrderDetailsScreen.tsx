@@ -8,6 +8,8 @@ import { SideDrawer } from './SideDrawer';
 import { CreateTaskForm, type CreateTaskData } from './CreateTaskForm';
 import { Snackbar } from './Snackbar';
 import { TwilioCallWindow } from './TwilioCallWindow';
+import { BloodCollectionPanel } from './BloodCollectionPanel';
+import { ActivityTimeline } from './ActivityTimeline';
 import { navigation } from '../utils/navigation';
 import { getTaskByOrderId, getTasksByQueueId, getOrderTasksByOrderId, createTask, updateTaskStatus, type Task, type OrderTask } from '../data/tasks';
 import { getAllQueues } from '../data/queues';
@@ -916,6 +918,7 @@ export const OrderDetailsScreen: React.FC<OrderDetailsScreenProps> = ({ orderId,
   const [highlightedTaskId, setHighlightedTaskId] = useState<string | null>(null);
   const [activeOrderFilter, setActiveOrderFilter] = useState<string | null>(null);
   const [showOutgoingCall, setShowOutgoingCall] = useState<boolean>(false);
+  const [bloodCollectionPanelOpen, setBloodCollectionPanelOpen] = useState<boolean>(false);
 
   // Get patient phone number based on patient name
   const getPatientPhone = () => {
@@ -1720,7 +1723,7 @@ export const OrderDetailsScreen: React.FC<OrderDetailsScreenProps> = ({ orderId,
                             </div>
                           )}
                         </div>
-                        <Button size="small">
+                        <Button size="small" onClick={() => setBloodCollectionPanelOpen(true)}>
                           Start
                         </Button>
                       </div>
@@ -1861,9 +1864,7 @@ export const OrderDetailsScreen: React.FC<OrderDetailsScreenProps> = ({ orderId,
 
                 {/* Activity Timeline Tab (only show when in tab mode and tab is active) */}
                 {activeTab === 'activityTimeline' && showSidebarAsTab && (
-                  <div style={styles.emptyState}>
-                    <p style={styles.emptyStateText}>Activity timeline coming soon</p>
-                  </div>
+                  <ActivityTimeline />
                 )}
               </>
             ) : (
@@ -1882,9 +1883,7 @@ export const OrderDetailsScreen: React.FC<OrderDetailsScreenProps> = ({ orderId,
             <p style={styles.sidebarTitle}>Activity Timeline</p>
           </div>
           <div style={styles.sidebarContent}>
-            <div style={styles.emptyState}>
-              <p style={styles.emptyStateText}>Activity timeline coming soon</p>
-            </div>
+            <ActivityTimeline />
           </div>
         </div>
         )}
@@ -1925,6 +1924,12 @@ export const OrderDetailsScreen: React.FC<OrderDetailsScreenProps> = ({ orderId,
         queueName={patientName}
         isConnected={true}
         isOutgoing={true}
+      />
+
+      {/* Blood Collection Panel */}
+      <BloodCollectionPanel
+        isOpen={bloodCollectionPanelOpen}
+        onClose={() => setBloodCollectionPanelOpen(false)}
       />
     </div>
   );

@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react';
 
+export type CallType = 'patient' | 'clinic';
+
 interface TwilioCallWindowProps {
   isOpen: boolean;
   onClose: () => void;
@@ -9,6 +11,7 @@ interface TwilioCallWindowProps {
   queueName?: string;
   isConnected?: boolean;
   isOutgoing?: boolean;
+  callType?: CallType;
 }
 
 // Inject keyframe animation for ringing effect
@@ -82,6 +85,7 @@ export const TwilioCallWindow: React.FC<TwilioCallWindowProps> = ({
   queueName = 'WH-GC Triage',
   isConnected = false,
   isOutgoing = false,
+  callType = 'patient',
 }) => {
   const status = 'available';
   const [callDuration, setCallDuration] = useState(0);

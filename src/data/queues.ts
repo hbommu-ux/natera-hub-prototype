@@ -70,6 +70,7 @@ const getRandomOwner = (): string => {
  * All Queue Names Database
  */
 export const queuesDatabase: Queue[] = [
+  { id: 'q009', name: 'All Oncology Support Tickets - Focus', taskCount: 87, lastUpdated: '12 min ago', ownedBy: 'Support Team' },
   { id: 'q001', name: 'All MI Cases - Clinic Unknowns', taskCount: 38, lastUpdated: '17 min ago', ownedBy: 'PC - NW' },
   { id: 'q002', name: 'All Onc MI Cases (MIS Integration)', taskCount: 45, lastUpdated: '17 min ago', ownedBy: 'TM' },
   { id: 'q003', name: 'Blood Collection Required', taskCount: 144, lastUpdated: '17 min ago', ownedBy: 'PC - NE' },
@@ -221,6 +222,7 @@ export const isSampleCollectionQueue = (queueId: string): boolean => {
     'q002', // All Onc MI Cases (MIS Integration)
     'q003', // Blood Collection Required
     'q004', // Blood Collection Required - My tickets
+    'q009', // All Oncology Support Tickets - Focus
     'q010', // Tissue Request - All Open Tickets
     'q029', // Auto-Redraw
     'q073', // EMR Natera Draws (MP Escalations)

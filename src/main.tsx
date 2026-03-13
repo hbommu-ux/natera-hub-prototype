@@ -3,7 +3,9 @@ import ReactDOM from 'react-dom/client'
 import { DashboardScreen } from './components/DashboardScreen'
 import { TaskListScreen } from './components/TaskListScreen'
 import { OrderDetailsScreen } from './components/OrderDetailsScreen'
-import { TwilioCallWindow } from './components/TwilioCallWindow'
+import { ClinicViewScreen } from './components/ClinicViewScreen'
+import { TwilioCallWindow, CallType } from './components/TwilioCallWindow'
+import { ActivityLogProvider } from './context/ActivityLogContext'
 import { navigation, NavigationState } from './utils/navigation'
 import './styles/globals.css'
 
@@ -14,10 +16,25 @@ const getInitialNavState = (): NavigationState => {
   const orderId = urlParams.get('orderId');
   const patientName = urlParams.get('patientName');
   const showOverview = urlParams.get('showOverview') === 'true';
+  const limsId = urlParams.get('limsId');
+  const accountName = urlParams.get('accountName');
+  const queueId = urlParams.get('queueId');
+  const queueName = urlParams.get('queueName');
   
   if (view === 'orderDetails' && orderId && patientName) {
     // Navigate immediately so the state is correct from the start
     navigation.navigateToOrderDetails(orderId, decodeURIComponent(patientName), undefined, undefined, showOverview);
+    return navigation.getState();
+  }
+  
+  if (view === 'clinicView' && limsId && accountName) {
+    // Navigate to clinic view with queue info if provided
+    navigation.navigateToClinicView(
+      decodeURIComponent(limsId), 
+      decodeURIComponent(accountName),
+      queueId || undefined,
+      queueName ? decodeURIComponent(queueName) : undefined
+    );
     return navigation.getState();
   }
   
@@ -36,6 +53,8 @@ const App = () => {
   const initialCallState = getInitialCallState();
   const [showTwilioCall, setShowTwilioCall] = useState(initialCallState.isActive);
   const [isCallConnected, setIsCallConnected] = useState(initialCallState.isConnected);
+  const [showCallTypeMenu, setShowCallTypeMenu] = useState(false);
+  const [currentCallType, setCurrentCallType] = useState<CallType>('patient');
 
   useEffect(() => {
     const unsubscribe = navigation.subscribe((state) => {
@@ -45,10 +64,17 @@ const App = () => {
   }, []);
 
   const handleAcceptCall = () => {
-    // Open Diana Prince's Order Overview page in a new browser tab with call active
     const baseUrl = window.location.origin + window.location.pathname;
-    const dianaPrinceUrl = `${baseUrl}?view=orderDetails&orderId=WkT9xPm3QvZn&patientName=Diana%20Prince&showOverview=true&callActive=true`;
-    window.open(dianaPrinceUrl, '_blank');
+    
+    if (currentCallType === 'patient') {
+      // Open Diana Prince's Order Overview page in a new browser tab with call active
+      const dianaPrinceUrl = `${baseUrl}?view=orderDetails&orderId=WkT9xPm3QvZn&patientName=Diana%20Prince&showOverview=true&callActive=true`;
+      window.open(dianaPrinceUrl, '_blank');
+    } else if (currentCallType === 'clinic') {
+      // Open Cleveland Clinic - Lung's Clinic View page in a new browser tab with call active
+      const clinicUrl = `${baseUrl}?view=clinicView&limsId=LIMS%20ID%2067345&accountName=Cleveland%20Clinic%20-%20Lung&queueId=q009&queueName=All%20Oncology%20Support%20Tickets%20-%20Focus&callActive=true`;
+      window.open(clinicUrl, '_blank');
+    }
     
     // Close the Twilio call window in this tab
     setShowTwilioCall(false);
@@ -57,6 +83,28 @@ const App = () => {
   const handleDeclineCall = () => {
     setShowTwilioCall(false);
   };
+
+  const handleCallTypeSelect = (callType: CallType) => {
+    setCurrentCallType(callType);
+    setShowCallTypeMenu(false);
+    setShowTwilioCall(true);
+  };
+
+  const getCallDetails = () => {
+    if (currentCallType === 'patient') {
+      return {
+        callerNumber: '+1 512-902-1215',
+        queueName: 'Diana Prince',
+      };
+    } else {
+      return {
+        callerNumber: '+1 216-444-2200',
+        queueName: 'Cleveland Clinic - Lung',
+      };
+    }
+  };
+
+  const callDetails = getCallDetails();
 
   const triggerButtonStyle: React.CSSProperties = {
     position: 'fixed',
@@ -79,6 +127,32 @@ const App = () => {
     transition: 'transform 0.2s, box-shadow 0.2s',
   };
 
+  const menuStyle: React.CSSProperties = {
+    position: 'fixed',
+    bottom: '70px',
+    right: '20px',
+    backgroundColor: '#ffffff',
+    border: '1px solid #e5e5e5',
+    borderRadius: '8px',
+    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+    zIndex: 1001,
+    overflow: 'hidden',
+    minWidth: '200px',
+  };
+
+  const menuItemStyle: React.CSSProperties = {
+    padding: '12px 16px',
+    fontSize: '14px',
+    fontFamily: 'Roboto, sans-serif',
+    cursor: 'pointer',
+    borderBottom: '1px solid #f0f0f0',
+    backgroundColor: '#ffffff',
+    transition: 'background-color 0.2s',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '10px',
+  };
+
   const renderCurrentScreen = () => {
     if (navState.currentView === 'taskList' && navState.queueId && navState.queueName) {
       return <TaskListScreen queueId={navState.queueId} queueName={navState.queueName} />;
@@ -88,29 +162,62 @@ const App = () => {
       return <OrderDetailsScreen orderId={navState.orderId} patientName={navState.patientName} queueId={navState.queueId} queueName={navState.queueName} showOverview={navState.showOverview} />;
     }
 
+    if (navState.currentView === 'clinicView' && navState.limsId && navState.accountName) {
+      return <ClinicViewScreen limsId={navState.limsId} accountName={navState.accountName} queueId={navState.queueId} queueName={navState.queueName} />;
+    }
+
     return <DashboardScreen />;
   };
 
   return (
-    <>
+    <ActivityLogProvider>
       {renderCurrentScreen()}
       
-      {/* Twilio Call Window - Always from Diana Prince */}
+      {/* Twilio Call Window */}
       <TwilioCallWindow
         isOpen={showTwilioCall}
         onClose={() => setShowTwilioCall(false)}
         onAccept={handleAcceptCall}
         onDecline={handleDeclineCall}
-        callerNumber="+1 512-902-1215"
-        queueName="Diana Prince"
+        callerNumber={callDetails.callerNumber}
+        queueName={callDetails.queueName}
         isConnected={isCallConnected}
+        callType={currentCallType}
       />
+
+      {/* Call Type Selection Menu */}
+      {showCallTypeMenu && (
+        <div style={menuStyle}>
+          <div
+            style={menuItemStyle}
+            onClick={() => handleCallTypeSelect('patient')}
+            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f5f5f5'}
+            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#ffffff'}
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="#0081bd">
+              <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+            </svg>
+            <span>Patient Call</span>
+          </div>
+          <div
+            style={{...menuItemStyle, borderBottom: 'none'}}
+            onClick={() => handleCallTypeSelect('clinic')}
+            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f5f5f5'}
+            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#ffffff'}
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="#0081bd">
+              <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/>
+            </svg>
+            <span>Clinic Call</span>
+          </div>
+        </div>
+      )}
 
       {/* Trigger Button */}
       {!showTwilioCall && (
         <button
           style={triggerButtonStyle}
-          onClick={() => setShowTwilioCall(true)}
+          onClick={() => setShowCallTypeMenu(!showCallTypeMenu)}
           onMouseEnter={(e) => {
             e.currentTarget.style.transform = 'scale(1.05)';
             e.currentTarget.style.boxShadow = '0 6px 16px rgba(0, 0, 0, 0.3)';
@@ -126,7 +233,7 @@ const App = () => {
           Simulate Incoming Call
         </button>
       )}
-    </>
+    </ActivityLogProvider>
   );
 };
 

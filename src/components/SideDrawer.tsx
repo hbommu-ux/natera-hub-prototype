@@ -3,7 +3,7 @@ import React, { useEffect } from 'react';
 interface SideDrawerProps {
   isOpen: boolean;
   onClose: () => void;
-  title: string;
+  title: string | React.ReactNode;
   children: React.ReactNode;
   width?: string;
 }
@@ -132,7 +132,11 @@ export const SideDrawer: React.FC<SideDrawerProps> = ({
         }}
       >
         <div style={styles.header}>
-          <h2 style={styles.title}>{title}</h2>
+          {typeof title === 'string' ? (
+            <h2 style={styles.title}>{title}</h2>
+          ) : (
+            <div style={styles.title}>{title}</div>
+          )}
           <button
             style={styles.closeButton}
             onClick={onClose}

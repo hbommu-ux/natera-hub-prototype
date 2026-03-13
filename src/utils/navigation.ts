@@ -3,7 +3,7 @@
  * Manages view state and navigation between screens
  */
 
-export type ViewType = 'dashboard' | 'taskList' | 'orderDetails';
+export type ViewType = 'dashboard' | 'taskList' | 'orderDetails' | 'clinicView';
 
 export interface NavigationState {
   currentView: ViewType;
@@ -12,6 +12,8 @@ export interface NavigationState {
   orderId?: string;
   patientName?: string;
   showOverview?: boolean;
+  limsId?: string;
+  accountName?: string;
 }
 
 type NavigationListener = (state: NavigationState) => void;
@@ -33,7 +35,7 @@ class NavigationManager {
     };
   }
 
-  navigate(view: ViewType, data?: { queueId?: string; queueName?: string; orderId?: string; patientName?: string; showOverview?: boolean }): void {
+  navigate(view: ViewType, data?: { queueId?: string; queueName?: string; orderId?: string; patientName?: string; showOverview?: boolean; limsId?: string; accountName?: string }): void {
     this.state = {
       currentView: view,
       queueId: data?.queueId,
@@ -41,6 +43,8 @@ class NavigationManager {
       orderId: data?.orderId,
       patientName: data?.patientName,
       showOverview: data?.showOverview,
+      limsId: data?.limsId,
+      accountName: data?.accountName,
     };
     this.notifyListeners();
   }
@@ -55,6 +59,10 @@ class NavigationManager {
 
   navigateToOrderDetails(orderId: string, patientName: string, queueId?: string, queueName?: string, showOverview?: boolean): void {
     this.navigate('orderDetails', { orderId, patientName, queueId, queueName, showOverview });
+  }
+
+  navigateToClinicView(limsId: string, accountName: string, queueId?: string, queueName?: string): void {
+    this.navigate('clinicView', { limsId, accountName, queueId, queueName });
   }
 
   private notifyListeners(): void {
